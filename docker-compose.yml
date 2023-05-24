@@ -1,0 +1,71 @@
+version: '3'
+services:
+
+  postgres:
+    image: postgres:13.0-alpine
+    restart: unless-stopped
+    container_name: movies_postgres
+    env_file:
+      - ./.env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", POSTGRES_DB]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql:ro
+    networks:
+      - movies_network
+
+  elastic:
+    image: elasticsearch:8.6.2
+    container_name: es_movies
+    environment:
+      - node.name=es_movies
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ingest.geoip.downloader.enabled=false
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: curl -s http://elastic:9200 >/dev/null || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 50
+    volumes:
+      - ./es_data:/usr/share/elasticsearch/data
+    networks:
+      - movies_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  pg_to_es_etl:
+    container_name: pg_to_es
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      ELASTIC_PORT: ${ELASTIC_PORT}
+      ELASTIC_INDEX: ${ELASTIC_INDEX}
+      BATCH_SIZE: ${BATCH_SIZE}
+    build: ./etl/
+    networks:
+      - movies_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      elastic:
+        condition: service_healthy
+
+networks:
+  movies_network:
