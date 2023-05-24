@@ -10,7 +10,7 @@ class PGFilmwork(BaseModel):
     genre: list
     title: str
     description: Union[str, None]
-    updated_at: datetime
+    modified: datetime
     persons: list
 
 

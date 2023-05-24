@@ -1,14 +1,10 @@
-FROM python:3.9
-
-
-RUN mkdir /etl
+FROM python:3.10
 
 WORKDIR /etl
 
 RUN mkdir storage_data
 
 COPY requirements.txt requirements.txt
-COPY entrypoint.sh entrypoint.sh
 
 RUN  pip install --upgrade pip \
     && pip install -r requirements.txt

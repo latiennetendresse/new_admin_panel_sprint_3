@@ -1,12 +1,5 @@
 import logging
 from functools import wraps
-from time import sleep
-
-
-def _sleep_time(start_sleep_time: float, border_sleep_time: float, factor: int, attempt: int) -> float:
-    formula = start_sleep_time * factor ** attempt
-    sleep_time = formula if formula < border_sleep_time else border_sleep_time
-    return min(border_sleep_time, sleep_time)
 
 
 def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=30):
@@ -26,16 +19,13 @@ def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=30):
     def func_wrapper(func):
         @wraps(func)
         def inner(*args, **kwargs):
-            attempt = 0
+            sleep_time = start_sleep_time
             while True:
-                sleep_time = _sleep_time(start_sleep_time, border_sleep_time, factor, attempt)
                 try:
-                    attempt += 1
-                    sleep(sleep_time)
-                    ret = func(*args, **kwargs)
+                    return func(*args, **kwargs)
                 except Exception as error:
                     logging.error(error)
-                else:
-                    return ret
+
         return inner
+
     return func_wrapper
