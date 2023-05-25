@@ -55,3 +55,7 @@ class ETLProcess:
 
 if __name__ == '__main__':
     ETLProcess().start()
+
+    # При попытке починить тесты выяснилось, что данные в элэстике лежат корректные, но тесты все равно не проходят
+    # я уже проверила все что могла и ничего не получается. Прикрепляю скриншоты
+    # https://docs.google.com/document/d/1oKUPulhj1j1U07OghdH2rlP5cuDBc7l9LPpgNIekjoM/edit?usp=sharing
